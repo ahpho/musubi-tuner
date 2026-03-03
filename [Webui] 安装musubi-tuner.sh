@@ -6,6 +6,82 @@ echo "Musubi Tuner 纯净安装脚本（CUDA 12.4）"
 echo "================================================="
 
 # -------------------------------
+# 函数定义区域（必须在调用前定义）
+# -------------------------------
+
+# 验证安装结果
+verify_installation() {
+    echo ""
+    echo "================================================="
+    echo "[6] 安装结果验证"
+    echo "================================================="
+    python -c "import torch; print(f'PyTorch 版本：{torch.__version__}（需 ≥2.5.1）')"
+    python -c "import torch; print(f'CUDA 支持：{torch.cuda.is_available()}（需为 True）')"
+    python -c "import torch; print(f'CUDA 版本：{torch.version.cuda if torch.cuda.is_available() else \"未检测到\"}')"
+    python -c "import torchvision; print(f'torchvision 版本：{torchvision.__version__}')"
+    
+    echo ""
+    echo "================================================="
+    echo "是否安装 SageAttention？(Y/N，默认Y)"
+    echo "SageAttention 可以显著提升注意力机制的性能"
+    echo "注意：Linux 需要编译安装，确保系统已安装 CUDA 开发工具"
+    echo "即使不安装，依然可以使用本工具，只是性能会下降"
+    echo "================================================="
+    read -p "请选择 (Y/N): " install_sage
+    install_sage=${install_sage:-Y}
+    
+    if [ "${install_sage^^}" = "Y" ]; then
+        install_sage_attention
+    else
+        echo "跳过 SageAttention 安装"
+        final_complete
+    fi
+}
+
+# 安装 SageAttention
+install_sage_attention() {
+    echo ""
+    echo "================================================="
+    echo "[7] 安装 SageAttention（Linux 从源码编译）"
+    echo "================================================="
+    
+    echo "正在安装 SageAttention 依赖..."
+    pip install ninja packaging
+    
+    echo "正在从 PyPI 安装 SageAttention..."
+    pip install sageattention
+    
+    if [ $? -ne 0 ]; then
+        echo "[错误] SageAttention 安装失败"
+        echo "可能需要："
+        echo "1. 确保 CUDA Toolkit 已正确安装（nvcc 可用）"
+        echo "2. 确保系统有编译环境（gcc/g++）"
+        exit 1
+    fi
+    
+    echo "验证安装结果..."
+    echo "检查 SageAttention 模块..."
+    python -c "import sageattention; print('✅ SageAttention 导入成功')"
+    
+    if [ $? -ne 0 ]; then
+        echo "[警告] SageAttention 导入失败，可能安装不完整"
+    else
+        echo "✅ SageAttention 验证通过"
+    fi
+    
+    final_complete
+}
+
+# 最终完成
+final_complete() {
+    echo ""
+    echo "================================================="
+    echo "✅ 所有安装步骤完成！"
+    echo "提示：运行时请确保虚拟环境已激活（source venv/bin/activate）"
+    echo "================================================="
+}
+
+# -------------------------------
 # 1. 检查 Python 版本（官方要求 3.10+）
 # -------------------------------
 PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null || echo "")
@@ -126,83 +202,7 @@ else
 fi
 
 # -------------------------------
-# 7. 验证安装结果（函数定义）
+# 7. 执行验证流程
 # -------------------------------
-verify_installation() {
-    echo ""
-    echo "================================================="
-    echo "[6] 安装结果验证"
-    echo "================================================="
-    python -c "import torch; print(f'PyTorch 版本：{torch.__version__}（需 ≥2.5.1）')"
-    python -c "import torch; print(f'CUDA 支持：{torch.cuda.is_available()}（需为 True）')"
-    python -c "import torch; print(f'CUDA 版本：{torch.version.cuda if torch.cuda.is_available() else \"未检测到\"}')"
-    python -c "import torchvision; print(f'torchvision 版本：{torchvision.__version__}')"
-    
-    echo ""
-    echo "================================================="
-    echo "是否安装 SageAttention？(Y/N，默认Y)"
-    echo "SageAttention 可以显著提升注意力机制的性能"
-    echo "注意：Linux 需要编译安装，确保系统已安装 CUDA 开发工具"
-    echo "即使不安装，依然可以使用本工具，只是性能会下降"
-    echo "================================================="
-    read -p "请选择 (Y/N): " install_sage
-    install_sage=${install_sage:-Y}
-    
-    if [ "${install_sage^^}" = "Y" ]; then
-        install_sage_attention
-    else
-        echo "跳过 SageAttention 安装"
-        final_complete
-    fi
-}
-
-# -------------------------------
-# 8. 安装 SageAttention（Linux 从源码安装）
-# -------------------------------
-install_sage_attention() {
-    echo ""
-    echo "================================================="
-    echo "[7] 安装 SageAttention（Linux 从源码编译）"
-    echo "================================================="
-    
-    # Linux 上 SageAttention 需要从源码安装
-    echo "正在安装 SageAttention 依赖..."
-    pip install ninja packaging
-    
-    echo "正在从 PyPI 安装 SageAttention..."
-    pip install sageattention
-    
-    if [ $? -ne 0 ]; then
-        echo "[错误] SageAttention 安装失败"
-        echo "可能需要："
-        echo "1. 确保 CUDA Toolkit 已正确安装（nvcc 可用）"
-        echo "2. 确保系统有编译环境（gcc/g++）"
-        exit 1
-    fi
-    
-    echo "验证安装结果..."
-    echo "检查 SageAttention 模块..."
-    python -c "import sageattention; print('✅ SageAttention 导入成功')"
-    
-    if [ $? -ne 0 ]; then
-        echo "[警告] SageAttention 导入失败，可能安装不完整"
-    else
-        echo "✅ SageAttention 验证通过"
-    fi
-    
-    final_complete
-}
-
-# -------------------------------
-# 9. 最终完成
-# -------------------------------
-final_complete() {
-    echo ""
-    echo "================================================="
-    echo "✅ 所有安装步骤完成！"
-    echo "提示：运行时请确保虚拟环境已激活（source venv/bin/activate）"
-    echo "================================================="
-}
-
 # 执行验证流程
 verify_installation
