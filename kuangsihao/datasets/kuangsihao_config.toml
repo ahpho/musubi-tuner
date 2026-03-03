@@ -1,0 +1,18 @@
+# resolution, caption_extension, batch_size, num_repeats, enable_bucket, bucket_no_upscale should be set in either general or datasets
+# otherwise, the default values will be used for each item
+ 
+# general configurations
+[general]
+resolution = [1024, 1344]
+caption_extension = ".txt"
+batch_size = 1
+enable_bucket = true
+bucket_no_upscale = false
+ 
+[[datasets]]
+num_repeats = 1   # 提高重复次数，少量数据也能收敛
+image_directory = "/home/share/game/juscent/ai-toolkit/datasets/tang"
+cache_directory = "/home/share/game/juscent/musubi-tuner/kuangsihao/cache"
+#num_repeats = 5 # 提高重复次数，少量数据也能收敛
+
+# other datasets can be added here. each dataset can have different configurations
