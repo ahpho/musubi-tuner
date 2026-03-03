@@ -227,7 +227,7 @@ PARAM_DESCRIPTIONS = {
 DEFAULT_CONFIG = {
     # 环境配置
     'enable_venv': True,
-    'venv_python_path': './venv/Scripts/',
+    'venv_python_path': './venv/bin/',
     
     # 核心模型路径 (必需参数)
     'dit_path': './model/diffusion_models/qwen_image_bf16.safetensors',  # DiT模型路径
@@ -298,7 +298,7 @@ def run_command(cmd, step_name, config=None):
     
     # 检查是否启用虚拟环境
     enable_venv = config.get('enable_venv', True) if config else True
-    venv_python_path = config.get('venv_python_path', './venv/Scripts/') if config else './venv/Scripts/'
+    venv_python_path = config.get('venv_python_path', './venv/bin/') if config else './venv/bin/'
     
     if enable_venv:
         # 构建虚拟环境Python路径
@@ -307,7 +307,9 @@ def run_command(cmd, step_name, config=None):
         # 如果是相对路径，转换为绝对路径
         if venv_python_path.startswith('./'):
             venv_python_path = venv_python_path[2:]  # 移除 './'
-        venv_python = os.path.join(os.getcwd(), venv_python_path, 'python.exe')
+        # 根据操作系统选择Python可执行文件名
+        python_exe = 'python.exe' if os.name == 'nt' else 'python'
+        venv_python = os.path.join(os.getcwd(), venv_python_path, python_exe)
         venv_python = os.path.normpath(venv_python)
         
         log_message(f"启用虚拟环境，Python路径: {venv_python}", 'info')
@@ -319,12 +321,13 @@ def run_command(cmd, step_name, config=None):
             log_message(f"使用虚拟环境Python执行: {' '.join(actual_cmd)}", 'debug')
         elif cmd[0] == 'accelerate':
             # 对于accelerate命令，直接使用accelerate可执行文件
-            venv_accelerate = os.path.join(os.path.dirname(venv_python), 'accelerate.exe')
+            accelerate_exe = 'accelerate.exe' if os.name == 'nt' else 'accelerate'
+            venv_accelerate = os.path.join(os.path.dirname(venv_python), accelerate_exe)
             if os.path.exists(venv_accelerate):
                 actual_cmd = [venv_accelerate] + cmd[1:]
                 log_message(f"使用虚拟环境accelerate执行: {' '.join(actual_cmd)}", 'debug')
             else:
-                # 如果accelerate.exe不存在，尝试使用python -m accelerate
+                # 如果accelerate可执行文件不存在，尝试使用python -m accelerate
                 actual_cmd = [venv_python, '-m', 'accelerate'] + cmd[1:]
                 log_message(f"使用虚拟环境Python执行accelerate模块: {' '.join(actual_cmd)}", 'debug')
         else:
@@ -1027,7 +1030,7 @@ def start_tensorboard_process():
                 
                 # 获取虚拟环境设置
                 enable_venv = config.get('enable_venv', True)
-                venv_python_path = config.get('venv_python_path', './venv/Scripts/')
+                venv_python_path = config.get('venv_python_path', './venv/bin/')
                 
                 if enable_venv:
                     # 构建虚拟环境Python路径
@@ -1036,7 +1039,9 @@ def start_tensorboard_process():
                     # 如果是相对路径，转换为绝对路径
                     if venv_python_path.startswith('./'):
                         venv_python_path = venv_python_path[2:]  # 移除 './'
-                    venv_python = os.path.join(os.getcwd(), venv_python_path, 'python.exe')
+                    # 根据操作系统选择Python可执行文件名
+                    python_exe = 'python.exe' if os.name == 'nt' else 'python'
+                    venv_python = os.path.join(os.getcwd(), venv_python_path, python_exe)
                     venv_python = os.path.normpath(venv_python)
                     
                     log_message(f"使用虚拟环境Python启动TensorBoard: {venv_python}", 'info')

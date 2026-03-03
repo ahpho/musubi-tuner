@@ -603,7 +603,7 @@ PARAM_DESCRIPTIONS = {
 DEFAULT_CONFIG = {
     # 环境配置
     'enable_venv': True,
-    'venv_python_path': './venv/Scripts/',
+    'venv_python_path': './venv/bin/',
     
     # 核心模型路径
     'dit': './model/diffusion_models/wan2.2_t2v_low_noise_14B_fp16.safetensors',
@@ -743,7 +743,7 @@ def handle_disconnect():
 def get_venv_python_path(config: Dict[str, Any]):
     """获取虚拟环境Python路径"""
     enable_venv = config.get('enable_venv', True)
-    venv_python_path = config.get('venv_python_path', './venv/Scripts/')
+    venv_python_path = config.get('venv_python_path', './venv/bin/')
     
     if enable_venv:
         # 处理路径
@@ -762,8 +762,11 @@ def get_venv_python_path(config: Dict[str, Any]):
         if not venv_dir.endswith(('/', '\\')):
             venv_dir = venv_dir + os.sep
         
+        # 根据操作系统选择Python可执行文件名
+        python_exe = 'python.exe' if os.name == 'nt' else 'python'
+        
         # 构建Python可执行文件路径
-        venv_python = os.path.join(venv_dir, 'python.exe')
+        venv_python = os.path.join(venv_dir, python_exe)
         venv_python = os.path.normpath(venv_python)
         
         # 检查Python可执行文件是否存在
